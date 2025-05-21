@@ -1,4 +1,4 @@
-version: '3.9'
+name: mern-app
 
 services:
   mongo:
@@ -9,28 +9,43 @@ services:
       - mongo-data:/data/db
     ports:
       - "27017:27017"
+    networks:
+      - mern-app
 
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
     volumes:
       - ./backend:/app
-      - /app/node_modules  # avoid node_modules conflict
+      - /app/node_modules  
     ports:
       - "5001:5000"
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/mern-db
+    networks:
+      - mern-app
+    env_file: ./.env
     depends_on:
       - mongo
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: ./.env
     volumes:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
       - backend
+    networks:
+      - mern-app
 
 volumes:
   mongo-data:
+networks:
+  mern-app:
+    driver: bridge
